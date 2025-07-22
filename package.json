@@ -1,7 +1,7 @@
 {
   "name": "editor-path-copier",
   "displayName": "Editor Path Copier",
-  "description": "Copy file path from editor toolbar button",
+  "description": "Easily copy file paths from the editor toolbar with one click",
   "version": "0.0.1",
   "publisher": "kosukesaigusa",
   "engines": {

@@ -1,22 +1,30 @@
 # Editor Path Copier
 
-VS Code拡張機能で、エディタのツールバーからファイルパスを簡単にコピーできます。
+A VS Code extension that allows you to easily copy file paths from the editor toolbar.
 
-## 機能
+## Features
 
-- エディタの右上に絶対パス・相対パスをコピーするボタンを追加
-- ワンクリックでクリップボードにパスをコピー
-- 通知でコピーしたパスを確認
+- Adds buttons to copy absolute/relative paths in the editor toolbar
+- One-click copy to clipboard
+- Notification displays the copied path for confirmation
 
-## 使い方
+## Usage
 
-1. VS Codeでファイルを開く
-2. エディタ右上のコピーアイコンをクリック
-3. 絶対パスまたは相対パスがクリップボードにコピーされます
+1. Open a file in VS Code
+2. Click the copy icon in the editor toolbar (top-right)
+3. The absolute or relative path will be copied to your clipboard
 
-## 開発
+## Development
 
 ```bash
 npm install
 npm run compile
 ```
+
+## Installation
+
+Install from the VS Code Marketplace or build from source.
+
+## License
+
+MIT

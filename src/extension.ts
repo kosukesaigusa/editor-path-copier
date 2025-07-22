@@ -1,8 +1,12 @@
 import * as vscode from 'vscode';
 import * as path from 'path';
 
+/**
+ * Activates the extension and registers commands.
+ * @param context - The extension context provided by VS Code.
+ */
 export function activate(context: vscode.ExtensionContext) {
-    // Copy Absolute Path command
+    // Register command to copy absolute path of the current file.
     const copyAbsolutePathCommand = vscode.commands.registerCommand(
         'editor-path-copier.copyAbsolutePath', 
         (uri?: vscode.Uri) => {
@@ -18,7 +22,7 @@ export function activate(context: vscode.ExtensionContext) {
         }
     );
 
-    // Copy Relative Path command  
+    // Register command to copy relative path of the current file.
     const copyRelativePathCommand = vscode.commands.registerCommand(
         'editor-path-copier.copyRelativePath',
         (uri?: vscode.Uri) => {
@@ -45,4 +49,7 @@ export function activate(context: vscode.ExtensionContext) {
     context.subscriptions.push(copyAbsolutePathCommand, copyRelativePathCommand);
 }
 
+/**
+ * Deactivates the extension.
+ */
 export function deactivate() {}
