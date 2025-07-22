@@ -1,5 +1,5 @@
-import * as vscode from 'vscode';
-import * as path from 'path';
+import * as path from 'node:path'
+import * as vscode from 'vscode'
 
 /**
  * Activates the extension and registers commands.
@@ -8,45 +8,54 @@ import * as path from 'path';
 export function activate(context: vscode.ExtensionContext) {
     // Register command to copy absolute path of the current file.
     const copyAbsolutePathCommand = vscode.commands.registerCommand(
-        'editor-path-copier.copyAbsolutePath', 
+        'editor-path-copier.copyAbsolutePath',
         (uri?: vscode.Uri) => {
-            const activeEditor = vscode.window.activeTextEditor;
+            const activeEditor = vscode.window.activeTextEditor
             if (!activeEditor) {
-                vscode.window.showWarningMessage('No active editor found');
-                return;
+                vscode.window.showWarningMessage('No active editor found')
+                return
             }
 
-            const filePath = uri ? uri.fsPath : activeEditor.document.uri.fsPath;
-            vscode.env.clipboard.writeText(filePath);
-            vscode.window.showInformationMessage(`Copied absolute path: ${filePath}`);
-        }
-    );
+            const filePath = uri ? uri.fsPath : activeEditor.document.uri.fsPath
+            vscode.env.clipboard.writeText(filePath)
+            vscode.window.showInformationMessage(
+                `Copied absolute path: ${filePath}`,
+            )
+        },
+    )
 
     // Register command to copy relative path of the current file.
     const copyRelativePathCommand = vscode.commands.registerCommand(
         'editor-path-copier.copyRelativePath',
         (uri?: vscode.Uri) => {
-            const activeEditor = vscode.window.activeTextEditor;
+            const activeEditor = vscode.window.activeTextEditor
             if (!activeEditor) {
-                vscode.window.showWarningMessage('No active editor found');
-                return;
+                vscode.window.showWarningMessage('No active editor found')
+                return
             }
 
-            const filePath = uri ? uri.fsPath : activeEditor.document.uri.fsPath;
-            const workspaceFolder = vscode.workspace.getWorkspaceFolder(vscode.Uri.file(filePath));
-            
+            const filePath = uri ? uri.fsPath : activeEditor.document.uri.fsPath
+            const workspaceFolder = vscode.workspace.getWorkspaceFolder(
+                vscode.Uri.file(filePath),
+            )
+
             if (!workspaceFolder) {
-                vscode.window.showWarningMessage('File is not in workspace');
-                return;
+                vscode.window.showWarningMessage('File is not in workspace')
+                return
             }
 
-            const relativePath = path.relative(workspaceFolder.uri.fsPath, filePath);
-            vscode.env.clipboard.writeText(relativePath);
-            vscode.window.showInformationMessage(`Copied relative path: ${relativePath}`);
-        }
-    );
+            const relativePath = path.relative(
+                workspaceFolder.uri.fsPath,
+                filePath,
+            )
+            vscode.env.clipboard.writeText(relativePath)
+            vscode.window.showInformationMessage(
+                `Copied relative path: ${relativePath}`,
+            )
+        },
+    )
 
-    context.subscriptions.push(copyAbsolutePathCommand, copyRelativePathCommand);
+    context.subscriptions.push(copyAbsolutePathCommand, copyRelativePathCommand)
 }
 
 /**
