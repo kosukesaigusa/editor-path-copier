@@ -10,6 +10,23 @@
   "categories": [
     "Other"
   ],
+  "keywords": [
+    "path",
+    "copy",
+    "clipboard",
+    "file",
+    "toolbar",
+    "utility"
+  ],
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/kosukesaigusa/editor-path-copier.git"
+  },
+  "bugs": {
+    "url": "https://github.com/kosukesaigusa/editor-path-copier/issues"
+  },
+  "homepage": "https://github.com/kosukesaigusa/editor-path-copier#readme",
+  "license": "MIT",
   "activationEvents": [],
   "main": "./out/extension.js",
   "contributes": {
@@ -46,12 +63,22 @@
     "watch": "tsc -watch -p ./",
     "lint": "biome lint --write",
     "format": "biome format --write",
-    "check": "biome check --write"
+    "check": "biome check --write",
+    "package": "vsce package",
+    "semantic-release": "semantic-release"
   },
   "devDependencies": {
     "@biomejs/biome": "1.9.4",
-    "@types/vscode": "^1.74.0",
+    "@semantic-release/changelog": "^6.0.3",
+    "@semantic-release/commit-analyzer": "^11.1.0",
+    "@semantic-release/git": "^10.0.1",
+    "@semantic-release/github": "^9.2.6",
+    "@semantic-release/release-notes-generator": "^12.1.0",
     "@types/node": "16.x",
+    "@types/vscode": "^1.74.0",
+    "@vscode/vsce": "^2.22.0",
+    "semantic-release": "^22.0.12",
+    "semantic-release-vsce": "^5.7.1",
     "typescript": "^4.9.4"
   }
 }
