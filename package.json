@@ -2,7 +2,7 @@
   "name": "editor-path-copier",
   "displayName": "Editor Path Copier",
   "description": "Easily copy file paths from the editor toolbar with one click",
-  "version": "0.0.1",
+  "version": "0.0.2",
   "publisher": "kosukesaigusa",
   "engines": {
     "vscode": "^1.74.0"
@@ -37,7 +37,7 @@
         "icon": "$(copy)"
       },
       {
-        "command": "editor-path-copier.copyRelativePath", 
+        "command": "editor-path-copier.copyRelativePath",
         "title": "Copy Relative Path",
         "icon": "$(copy)"
       }
@@ -51,7 +51,7 @@
         },
         {
           "command": "editor-path-copier.copyRelativePath",
-          "when": "resourceScheme == file", 
+          "when": "resourceScheme == file",
           "group": "navigation"
         }
       ]
