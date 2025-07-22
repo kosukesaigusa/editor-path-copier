@@ -1,16 +1,28 @@
 name: Release
 
 on:
-  push:
-    branches: [main]
+  workflow_dispatch:
+    inputs:
+      release_type:
+        description: 'Release type'
+        required: true
+        type: choice
+        options:
+          - patch
+          - minor
+          - major
+        default: 'patch'
+      prerelease:
+        description: 'Pre-release'
+        required: false
+        type: boolean
+        default: false
 
 jobs:
   release:
-    if: "!contains(github.event.head_commit.message, 'skip ci')"
     runs-on: ubuntu-latest
     permissions:
       contents: write
-      issues: write
       pull-requests: write
       id-token: write
     
@@ -19,6 +31,7 @@ jobs:
         uses: actions/checkout@v4
         with:
           fetch-depth: 0
+          token: ${{ secrets.GITHUB_TOKEN }}
       
       - name: Setup Node.js
         uses: actions/setup-node@v4
@@ -35,12 +48,168 @@ jobs:
       - name: Compile TypeScript
         run: npm run compile
       
+      - name: Configure Git
+        run: |
+          git config --local user.email "action@github.com"
+          git config --local user.name "GitHub Action"
+      
+      - name: Get current version
+        id: current_version
+        run: |
+          echo "version=$(node -p "require('./package.json').version")" >> $GITHUB_OUTPUT
+      
+      - name: Calculate new version
+        id: new_version
+        run: |
+          current_version="${{ steps.current_version.outputs.version }}"
+          IFS='.' read -r -a version_parts <<< "$current_version"
+          major=${version_parts[0]}
+          minor=${version_parts[1]}
+          patch=${version_parts[2]}
+          
+          case "${{ inputs.release_type }}" in
+            major)
+              major=$((major + 1))
+              minor=0
+              patch=0
+              ;;
+            minor)
+              minor=$((minor + 1))
+              patch=0
+              ;;
+            patch)
+              patch=$((patch + 1))
+              ;;
+          esac
+          
+          new_version="$major.$minor.$patch"
+          if [ "${{ inputs.prerelease }}" == "true" ]; then
+            new_version="$new_version-beta"
+          fi
+          
+          echo "version=$new_version" >> $GITHUB_OUTPUT
+          echo "New version: $new_version"
+      
+      - name: Update package.json version
+        run: |
+          npm version ${{ steps.new_version.outputs.version }} --no-git-tag-version
+      
+      - name: Generate CHANGELOG
+        id: changelog
+        run: |
+          # Get commit messages since last tag
+          last_tag=$(git describe --tags --abbrev=0 2>/dev/null || echo "")
+          if [ -z "$last_tag" ]; then
+            commits=$(git log --oneline --pretty=format:"- %s" HEAD)
+          else
+            commits=$(git log --oneline --pretty=format:"- %s" $last_tag..HEAD)
+          fi
+          
+          # Update CHANGELOG.md
+          if [ ! -f CHANGELOG.md ]; then
+            cat > CHANGELOG.md << 'EOF'
+          # Changelog
+          
+          All notable changes to this project will be documented in this file.
+          
+          The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
+          and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
+          EOF
+          fi
+          
+          # Create new entry
+          date=$(date +%Y-%m-%d)
+          version="${{ steps.new_version.outputs.version }}"
+          
+          # Create temp file with new entry
+          cat > temp_changelog.md << EOF
+          # Changelog
+          
+          All notable changes to this project will be documented in this file.
+          
+          The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
+          and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
+          
+          ## [$version] - $date
+          
+          $commits
+          
+          EOF
+          
+          # Append old content (skip the header)
+          tail -n +7 CHANGELOG.md >> temp_changelog.md 2>/dev/null || true
+          mv temp_changelog.md CHANGELOG.md
+          
+          # Set output for release notes
+          echo "notes<<EOF" >> $GITHUB_OUTPUT
+          echo "$commits" >> $GITHUB_OUTPUT
+          echo "EOF" >> $GITHUB_OUTPUT
+      
       - name: Install VSCE
         run: npm install -g @vscode/vsce
       
-      - name: Release
+      - name: Package VSIX
+        run: vsce package
+      
+      - name: Create Release Tag
+        run: |
+          git add package.json CHANGELOG.md
+          git commit -m "chore(release): v${{ steps.new_version.outputs.version }}"
+          git tag -a "v${{ steps.new_version.outputs.version }}" -m "Release v${{ steps.new_version.outputs.version }}"
+          git push origin "v${{ steps.new_version.outputs.version }}"
+      
+      - name: Create GitHub Release
+        uses: actions/create-release@v1
+        id: create_release
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        with:
+          tag_name: v${{ steps.new_version.outputs.version }}
+          release_name: v${{ steps.new_version.outputs.version }}
+          body: |
+            ## Changes
+            ${{ steps.changelog.outputs.notes }}
+          draft: false
+          prerelease: ${{ inputs.prerelease }}
+      
+      - name: Upload VSIX to Release
+        uses: actions/upload-release-asset@v1
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        with:
+          upload_url: ${{ steps.create_release.outputs.upload_url }}
+          asset_path: ./editor-path-copier-${{ steps.new_version.outputs.version }}.vsix
+          asset_name: editor-path-copier-${{ steps.new_version.outputs.version }}.vsix
+          asset_content_type: application/zip
+      
+      - name: Publish to VS Code Marketplace
+        env:
           VSCE_PAT: ${{ secrets.VSCE_PAT }}
-          OVSX_PAT: ${{ secrets.OVSX_PAT }}
-        run: npx semantic-release
+        run: |
+          if [ -n "$VSCE_PAT" ]; then
+            vsce publish --packagePath ./editor-path-copier-${{ steps.new_version.outputs.version }}.vsix
+          else
+            echo "VSCE_PAT not set, skipping marketplace publish"
+          fi
+      
+      - name: Create merge-back PR
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          # Create a new branch for merge-back
+          branch_name="release/merge-back-v${{ steps.new_version.outputs.version }}"
+          git checkout -b "$branch_name"
+          git push origin "$branch_name"
+          
+          # Create PR
+          gh pr create \
+            --title "chore: merge back release v${{ steps.new_version.outputs.version }}" \
+            --body "Auto-generated PR to merge back release changes to main branch.
+          
+          ## Changes
+          - Updated package.json version to ${{ steps.new_version.outputs.version }}
+          - Updated CHANGELOG.md with release notes
+          
+          This PR should be merged to keep main branch up to date with release changes." \
+            --base main \
+            --head "$branch_name"

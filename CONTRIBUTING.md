@@ -13,9 +13,9 @@ Thank you for your interest in contributing to Editor Path Copier!
 
 ## Commit Message Convention
 
-This project uses [Conventional Commits](https://www.conventionalcommits.org/) for automated releases.
+This project follows standard Git commit conventions for clear history.
 
-### Commit Types
+### Recommended Commit Types
 
 - `feat`: New features
 - `fix`: Bug fixes
@@ -33,28 +33,24 @@ fix: resolve clipboard permission issue
 docs: update installation instructions
 ```
 
-### Breaking Changes
-
-For breaking changes, add `BREAKING CHANGE:` in the commit body:
-
-```
-feat: change command names
-
-BREAKING CHANGE: Command names have been updated to follow VS Code conventions
-```
-
 ## Release Process
 
-This project uses automated releases via semantic-release:
+Releases are handled manually via GitHub Actions:
 
-- `fix:` commits trigger patch releases (1.0.x)
-- `feat:` commits trigger minor releases (1.x.0)
-- `BREAKING CHANGE:` triggers major releases (x.0.0)
+1. **Development**: Continue normal development on `main` branch
+2. **Ready to Release**: Go to GitHub Actions → Release workflow
+3. **Choose Release Type**: 
+   - `patch` for bug fixes (1.0.x)
+   - `minor` for new features (1.x.0)
+   - `major` for breaking changes (x.0.0)
+4. **Automatic Processing**:
+   - Version bump in package.json
+   - CHANGELOG.md generation
+   - GitHub Release creation
+   - VS Code Marketplace publish
+   - Merge-back PR creation
 
-Releases are automatically published to:
-- GitHub Releases
-- VS Code Marketplace
-- Open VSX Registry
+This approach gives maintainers full control over release timing.
 
 ## Code Style
 

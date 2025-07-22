@@ -69,17 +69,20 @@ npm run package    # Create VSIX package
 Contributions are welcome! Please see [CONTRIBUTING.md](CONTRIBUTING.md) for guidelines.
 
 This project uses:
-- [Conventional Commits](https://www.conventionalcommits.org/) for automated releases
 - [Biome](https://biomejs.dev/) for code formatting and linting
-- [Semantic Release](https://semantic-release.gitbook.io/) for automated versioning
+- GitHub Actions for automated release workflow
+- Manual release control via workflow dispatch
 
 ## Release Process
 
-Releases are fully automated using semantic-release:
+Releases are handled manually for complete control:
 
-- `fix:` commits → patch release (e.g., 1.0.1)
-- `feat:` commits → minor release (e.g., 1.1.0)  
-- `BREAKING CHANGE:` → major release (e.g., 2.0.0)
+1. **GitHub Actions → Release workflow**
+2. **Choose release type** (patch/minor/major)
+3. **Automatic processing**:
+   - Version bump and CHANGELOG generation
+   - GitHub Release and VS Code Marketplace publish
+   - Merge-back PR creation
 
 ## License
 
