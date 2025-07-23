@@ -8,7 +8,8 @@
     "vscode": "^1.74.0"
   },
   "categories": [
-    "Other"
+    "Other",
+    "Productivity"
   ],
   "keywords": [
     "path",
@@ -16,7 +17,14 @@
     "clipboard",
     "file",
     "toolbar",
-    "utility"
+    "utility",
+    "copy path",
+    "file path",
+    "absolute path",
+    "relative path",
+    "path copy",
+    "editor",
+    "productivity"
   ],
   "repository": {
     "type": "git",
