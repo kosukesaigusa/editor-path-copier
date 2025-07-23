@@ -2,7 +2,7 @@
   "name": "editor-path-copier",
   "displayName": "Editor Path Copier",
   "description": "Easily copy file paths from the editor toolbar with one click",
-  "version": "0.0.2",
+  "version": "0.1.0",
   "publisher": "kosukesaigusa",
   "engines": {
     "vscode": "^1.74.0"
