@@ -31,9 +31,16 @@ A VS Code extension that allows you to easily copy file paths from the editor to
 3. Search for "Editor Path Copier"
 4. Click Install
 
-### From VSIX
+### For Non-VS Code Editors (e.g. Cursor)
 
-Download the latest `.vsix` file from [GitHub Releases](https://github.com/kosukesaigusa/editor-path-copier/releases) and install manually.
+If you're using VS Code-based editors that don't have access to the VS Code marketplace, run:
+
+```bash
+# Download and install the extension
+curl --compressed -L -o editor-path-copier.vsix "https://marketplace.visualstudio.com/_apis/public/gallery/publishers/kosukesaigusa/vsextensions/editor-path-copier/latest/vspackage"
+cursor --install-extension editor-path-copier.vsix
+rm editor-path-copier.vsix
+```
 
 ## Development
 
@@ -69,6 +76,7 @@ npm run package    # Create VSIX package
 Contributions are welcome! Please see [CONTRIBUTING.md](CONTRIBUTING.md) for guidelines.
 
 This project uses:
+
 - [Biome](https://biomejs.dev/) for code formatting and linting
 - GitHub Actions for automated release workflow
 - Manual release control via workflow dispatch
