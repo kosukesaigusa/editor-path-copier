@@ -10,13 +10,14 @@ export function activate(context: vscode.ExtensionContext) {
     const copyAbsolutePathCommand = vscode.commands.registerCommand(
         'editor-path-copier.copyAbsolutePath',
         (uri?: vscode.Uri) => {
-            const activeEditor = vscode.window.activeTextEditor
-            if (!activeEditor) {
+            const filePath =
+                uri?.fsPath ??
+                vscode.window.activeTextEditor?.document.uri.fsPath
+            if (!filePath) {
                 vscode.window.showWarningMessage('No active editor found')
                 return
             }
 
-            const filePath = uri ? uri.fsPath : activeEditor.document.uri.fsPath
             vscode.env.clipboard.writeText(filePath)
             vscode.window.showInformationMessage(
                 `Copied absolute path: ${filePath}`,
@@ -28,13 +29,13 @@ export function activate(context: vscode.ExtensionContext) {
     const copyRelativePathCommand = vscode.commands.registerCommand(
         'editor-path-copier.copyRelativePath',
         (uri?: vscode.Uri) => {
-            const activeEditor = vscode.window.activeTextEditor
-            if (!activeEditor) {
+            const filePath =
+                uri?.fsPath ??
+                vscode.window.activeTextEditor?.document.uri.fsPath
+            if (!filePath) {
                 vscode.window.showWarningMessage('No active editor found')
                 return
             }
-
-            const filePath = uri ? uri.fsPath : activeEditor.document.uri.fsPath
             const workspaceFolder = vscode.workspace.getWorkspaceFolder(
                 vscode.Uri.file(filePath),
             )
