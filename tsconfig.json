@@ -1,11 +1,13 @@
 {
     "compilerOptions": {
-        "module": "commonjs",
+        "module": "node16",
         "target": "ES2020",
+        "moduleResolution": "node16",
         "outDir": "out",
         "lib": ["ES2020"],
         "sourceMap": true,
         "rootDir": "src",
-        "strict": true
+        "strict": true,
+        "types": ["node"]
     }
 }

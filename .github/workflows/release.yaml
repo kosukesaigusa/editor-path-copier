@@ -36,7 +36,7 @@ jobs:
       - name: Setup Node.js
         uses: actions/setup-node@v4
         with:
-          node-version: '18'
+          node-version: '20'
           cache: 'npm'
       
       - name: Install dependencies
@@ -97,53 +97,90 @@ jobs:
       - name: Generate CHANGELOG
         id: changelog
         run: |
-          # Get commit messages since last tag
+          # Get commit messages since last tag (exclude merge commits)
           last_tag=$(git describe --tags --abbrev=0 2>/dev/null || echo "")
           if [ -z "$last_tag" ]; then
-            commits=$(git log --oneline --pretty=format:"- %s" HEAD)
+            commits=$(git log --no-merges --pretty=format:"%s" HEAD)
           else
-            commits=$(git log --oneline --pretty=format:"- %s" $last_tag..HEAD)
+            commits=$(git log --no-merges --pretty=format:"%s" $last_tag..HEAD)
           fi
-          
+
+          # Categorize commits by conventional commit prefix
+          features=""
+          fixes=""
+          others=""
+
+          while IFS= read -r line; do
+            [ -z "$line" ] && continue
+            if echo "$line" | grep -qE "^feat(\(.+\))?:"; then
+              msg=$(echo "$line" | sed -E 's/^feat(\(.+\))?: //')
+              features="${features}- ${msg}\n"
+            elif echo "$line" | grep -qE "^fix(\(.+\))?:"; then
+              msg=$(echo "$line" | sed -E 's/^fix(\(.+\))?: //')
+              fixes="${fixes}- ${msg}\n"
+            else
+              # Skip chore(release) commits
+              echo "$line" | grep -qE "^chore\(release\)" && continue
+              others="${others}- ${line}\n"
+            fi
+          done <<< "$commits"
+
+          # Build changelog entry
+          entry=""
+          if [ -n "$features" ]; then
+            entry="${entry}### Features\n\n${features}\n"
+          fi
+          if [ -n "$fixes" ]; then
+            entry="${entry}### Bug Fixes\n\n${fixes}\n"
+          fi
+          if [ -n "$others" ]; then
+            entry="${entry}### Others\n\n${others}\n"
+          fi
+
+          # Fallback if no categorized commits
+          if [ -z "$entry" ]; then
+            entry="- No notable changes\n"
+          fi
+
           # Update CHANGELOG.md
           if [ ! -f CHANGELOG.md ]; then
-            cat > CHANGELOG.md << 'EOF'
+            cat > CHANGELOG.md << 'HEADER'
           # Changelog
-          
+
           All notable changes to this project will be documented in this file.
-          
+
           The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
           and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
-          EOF
+          HEADER
           fi
-          
+
           # Create new entry
           date=$(date +%Y-%m-%d)
           version="${{ steps.new_version.outputs.version }}"
-          
-          # Create temp file with new entry
-          cat > temp_changelog.md << EOF
-          # Changelog
-          
-          All notable changes to this project will be documented in this file.
-          
-          The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
-          and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
-          
-          ## [$version] - $date
-          
-          $commits
-          
-          EOF
-          
+
+          {
+            echo "# Changelog"
+            echo ""
+            echo "All notable changes to this project will be documented in this file."
+            echo ""
+            echo "The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),"
+            echo "and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html)."
+            echo ""
+            echo "## [$version] - $date"
+            echo ""
+            echo -e "$entry"
+          } > temp_changelog.md
+
           # Append old content (skip the header)
           tail -n +7 CHANGELOG.md >> temp_changelog.md 2>/dev/null || true
           mv temp_changelog.md CHANGELOG.md
-          
+
           # Set output for release notes
-          echo "notes<<EOF" >> $GITHUB_OUTPUT
-          echo "$commits" >> $GITHUB_OUTPUT
-          echo "EOF" >> $GITHUB_OUTPUT
+          {
+            echo "notes<<NOTES_EOF"
+            echo -e "$entry"
+            echo "NOTES_EOF"
+          } >> $GITHUB_OUTPUT
       
       - name: Install VSCE
         run: npm install -g @vscode/vsce
@@ -159,28 +196,16 @@ jobs:
           git push origin "v${{ steps.new_version.outputs.version }}"
       
       - name: Create GitHub Release
-        uses: actions/create-release@v1
-        id: create_release
-        env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        uses: softprops/action-gh-release@v2
         with:
           tag_name: v${{ steps.new_version.outputs.version }}
-          release_name: v${{ steps.new_version.outputs.version }}
+          name: v${{ steps.new_version.outputs.version }}
           body: |
             ## Changes
             ${{ steps.changelog.outputs.notes }}
           draft: false
           prerelease: ${{ inputs.prerelease }}
-      
-      - name: Upload VSIX to Release
-        uses: actions/upload-release-asset@v1
-        env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-        with:
-          upload_url: ${{ steps.create_release.outputs.upload_url }}
-          asset_path: ./editor-path-copier-${{ steps.new_version.outputs.version }}.vsix
-          asset_name: editor-path-copier-${{ steps.new_version.outputs.version }}.vsix
-          asset_content_type: application/zip
+          files: ./editor-path-copier-${{ steps.new_version.outputs.version }}.vsix
       
       - name: Publish to VS Code Marketplace
         env:
