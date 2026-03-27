@@ -1,0 +1,12 @@
+.github/**
+.vscode-test/**
+scripts/**
+src/**
+node_modules/**
+coverage/**
+*.vsix
+.DS_Store
+.gitignore
+biome.json
+tsconfig.json
+CONTRIBUTING.md
